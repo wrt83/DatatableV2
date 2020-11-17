@@ -136,7 +136,7 @@ public with sharing class SObjectController2 {
             datatableColumnFieldDescriptor = datatableColumnFieldDescriptor 
                 + ',{"label" : "' + dfr.getLabel() 
                 + '", "fieldName" : "' + dfr.getName()      // pass back correct API name if user did not pass in correct case (Name vs name)
-                + '", "type" : "' + convertType(dfr.getType().name(), dfr.isCalculated()) 
+                + '", "type" : "' + convertType(dfr.getType().name(), dfr.isHtmlFormatted()) 
                 + '", "scale" : "' + dfr.getScale() 
                 + '"}';
 
@@ -293,7 +293,7 @@ public with sharing class SObjectController2 {
     }
 
     //convert the apex type to the corresponding javascript type that datatable will understand
-    private static String convertType (String apexType, Boolean isFormula){
+    private static String convertType (String apexType, Boolean isHTML){
         switch on apexType {
             when 'BOOLEAN' {
                 return 'boolean';
@@ -338,7 +338,11 @@ public with sharing class SObjectController2 {
                 return 'checkbox';
             }
             when 'STRING' {
-                if (isFormula) return 'richtext';
+                if (isHTML) return 'richtext';
+                return 'text';
+            }
+            when 'TEXTAREA' {
+                if (isHTML) return 'richtext';
                 return 'text';
             }
             when else {
