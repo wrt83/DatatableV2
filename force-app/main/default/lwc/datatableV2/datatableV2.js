@@ -199,6 +199,9 @@ export default class DatatableV2 extends LightningElement {
             this.preSelectedRows = (this.preSelectedRowsString.length > 0) ? JSON.parse(this.preSelectedRowsString) : [];  
         }
 
+        //flatten the neested items
+        this.tableData = flattenQueryResult(this.tableData);
+
         // Restrict the number of records handled by this component
         let min = Math.min(MAXROWCOUNT, this.maxNumberOfRows);
         if (this.tableData.length > min) {
@@ -1492,4 +1495,56 @@ export default class DatatableV2 extends LightningElement {
     setIsInvalidFlag(value) {
         this.isInvalid = value;
     }
+}
+
+function flattenObject(propName, obj)
+{
+    var flatObject = [];
+    
+    for(var prop in obj)
+    {
+        //if this property is an object, we need to flatten again
+        var propIsNumber = isNaN(propName);
+        var preAppend = propIsNumber ? propName+'.' : '';
+        if(typeof obj[prop] == 'object')
+        {
+            flatObject[preAppend+prop] = Object.assign(flatObject, flattenObject(preAppend+prop,obj[prop]) );
+
+        }    
+        else
+        {
+            flatObject[preAppend+prop] = obj[prop];
+        }
+    }
+    return flatObject;
+}
+
+//flattens nested query results so that you can use dot notation to refernce related items.  
+//e.g. Use Account.Name from Contact.
+function flattenQueryResult(listOfObjects) {
+    if(Array.isArray(listOfObjects) === false) 
+    {
+        var listOfObjects = [listOfObjects];
+    }
+    
+    for(var i = 0; i < listOfObjects.length; i++)
+    {
+        var obj = listOfObjects[i];
+        for(var prop in obj)
+        {      
+            if(!obj.hasOwnProperty(prop)) continue;
+            if(typeof obj[prop] == 'object' && typeof obj[prop] != 'Array')
+            {
+                obj = Object.assign(obj, flattenObject(prop,obj[prop]));
+            }
+            else if(typeof obj[prop] == 'Array')
+            {
+                for(var j = 0; j < obj[prop].length; j++)
+                {
+                    obj[prop+'.'+j] = Object.assign(obj,flattenObject(prop,obj[prop]));
+                }
+            }
+        }
+    }
+    return listOfObjects;
 }
